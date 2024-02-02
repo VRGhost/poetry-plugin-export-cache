@@ -1,8 +1,9 @@
-import cleo
-import poetry
+import poetry.console.application
+import poetry.plugins
+from cleo.commands.command import Command
 
-class CustomCommand(cleo.commands.command.Command):
 
+class CustomCommand(Command):
     name = "export-cache"
 
     def handle(self) -> int:
@@ -10,12 +11,11 @@ class CustomCommand(cleo.commands.command.Command):
 
         return 0
 
+
 def factory():
     return CustomCommand()
 
-class ExportCachePlugin(poetry.plugins.application_plugin.ApplicationPlugin):
 
+class ExportCachePlugin(poetry.plugins.application_plugin.ApplicationPlugin):
     def activate(self, application: poetry.console.application.Application):
-        print(type(application))
-        1/0
-        application.command_loader.register_factory("export cache", factory)
+        application.command_loader.register_factory("export-cache", factory)
