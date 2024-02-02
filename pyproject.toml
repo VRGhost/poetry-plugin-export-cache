@@ -6,7 +6,7 @@ authors = ["Ilya O. <vrghost@gmail.com>"]
 license = "MIT"
 readme = "README.md"
 packages = [
-    {include = "async_timer", from = "src"}
+    {include = "poetry_plugin_export_cache", from = "src"}
 ]
 classifiers = [
     "Intended Audience :: Developers",
@@ -26,9 +26,10 @@ keywords = ["poetry", "plugin"]
 [tool.poetry.dependencies]
 python = ">=3.8,<4"
 poetry = ">=1.7.1"
+cleo = "^2.1.0"
 
-[tool.poetry.plugins."poetry.plugin"]
-demo = "poetry_plugin_export_cache.plugin:MyPlugin"
+[tool.poetry.plugins."poetry.application.plugin"]
+export-packages = "poetry_plugin_export_cache.plugin:ExportCachePlugin"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.11.0"
@@ -68,15 +69,15 @@ line-length = 88
 
 [tool.ruff.isort]
 order-by-type = true
-known-first-party = ["async_timer", ]
+known-first-party = ["poetry_plugin_export_cache", ]
 forced-separate = ["tests"]
 
 [tool.black]
 line-length = 88
-target-version = ['py310']
+target-version = ['py38']
 
 [tool.pytest.ini_options]
-addopts = "-v -l --color=yes --cov=async_timer --cov-report term-missing --no-cov-on-fail --local-badge-output-dir docs/badges/"
+addopts = "-v -l --color=yes --cov=poetry_plugin_export_cache --cov-report term-missing --no-cov-on-fail --local-badge-output-dir docs/badges/"
 testpaths = [
     "tests",
 ]
