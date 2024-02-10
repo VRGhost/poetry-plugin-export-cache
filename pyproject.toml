@@ -1,12 +1,12 @@
 [tool.poetry]
-name = "poetry-plugin-export-cache"
+name = "poetry-plugin-export-packages"
 version = "0.0.0dev0"
 description = "The missing Python async timer."
 authors = ["Ilya O. <vrghost@gmail.com>"]
 license = "MIT"
 readme = "README.md"
 packages = [
-    {include = "poetry_plugin_export_cache", from = "src"}
+    {include = "poetry_plugin_export_packages", from = "src"}
 ]
 classifiers = [
     "Intended Audience :: Developers",
@@ -21,14 +21,14 @@ classifiers = [
 keywords = ["poetry", "plugin"]
 
 [tool.poetry.urls]
-"Source" = "https://github.com/VRGhost/poetry-plugin-export-cache"
+"Source" = "https://github.com/VRGhost/poetry-plugin-export-packages"
 
 [tool.poetry.dependencies]
 python = ">=3.8,<4"
 poetry = ">=1.7.1"
 
 [tool.poetry.plugins."poetry.application.plugin"]
-export-cache = "poetry_plugin_export_cache.plugin:ExportCachePlugin"
+export-cache = "poetry_plugin_export_packages.plugin:ExportPackagesPlugin"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.11.0"
@@ -68,7 +68,7 @@ line-length = 88
 
 [tool.ruff.isort]
 order-by-type = true
-known-first-party = ["poetry_plugin_export_cache", ]
+known-first-party = ["poetry_plugin_export_packages", ]
 forced-separate = ["tests"]
 
 [tool.black]
@@ -76,7 +76,7 @@ line-length = 88
 target-version = ['py38']
 
 [tool.pytest.ini_options]
-addopts = "-v -l --color=yes --cov=poetry_plugin_export_cache --cov-report term-missing --no-cov-on-fail --local-badge-output-dir docs/badges/"
+addopts = "-v -l --color=yes --cov=poetry_plugin_export_packages --cov-report term-missing --no-cov-on-fail --local-badge-output-dir docs/badges/"
 testpaths = [
     "tests",
 ]
