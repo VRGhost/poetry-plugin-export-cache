@@ -1,25 +1,25 @@
-import poetry.console.application
-import poetry.plugins
-import typing
 import pathlib
-from poetry.core.packages.dependency_group import MAIN_GROUP
+import shlex
+import shutil
+import tempfile
+import typing
+
+import poetry.console.application
+import poetry.installation.executor
+import poetry.installation.installer
+import poetry.plugins
+import poetry.utils.env
 from cleo.helpers import option
 from poetry.console.commands.command import Command
 from poetry.console.commands.group_command import GroupCommand
-import poetry.installation.installer
-import poetry.installation.executor
-import poetry.utils.env
-import tempfile
-import sys
-import shutil
-import shlex
+from poetry.core.packages.dependency_group import MAIN_GROUP
+
 
 class ExportOutput:
-
     rel_root: pathlib.Path
     out_dir: pathlib.Path
-    pip_commands : typing.List[typing.Tuple[str]]
-    
+    pip_commands: typing.List[typing.Tuple[str]]
+
     def __init__(self, out_dir: pathlib.Path, rel_root: pathlib.Path):
         self.rel_root = rel_root.absolute()
         self.out_dir = out_dir.absolute()
@@ -40,24 +40,24 @@ class ExportOutput:
         else:
             raise NotImplementedError(orig)
         return out_fname
-    
+
     def to_rel_path(self, path: pathlib.Path) -> pathlib.Path:
         return path.relative_to(self.rel_root)
 
     def add_pip_command(self, cmd: typing.Iterable[str]):
         self.pip_commands.append(tuple(cmd))
 
-    def get_pip_script(self, shebang:str) -> str:
-        out_lines = [shebang, '']
+    def get_pip_script(self, shebang: str) -> str:
+        out_lines = [shebang, ""]
         for cmd in self.pip_commands:
-            out_lines.append(shlex.join(('pip',)+ cmd))
-        return '\n'.join(out_lines)
+            out_lines.append(shlex.join(("pip",) + cmd))
+        return "\n".join(out_lines)
+
 
 class ExportEnv(poetry.utils.env.NullEnv):
-
     export_out: ExportOutput
 
-    def __init__(self, export_plugin_output:ExportOutput, **kwargs):
+    def __init__(self, export_plugin_output: ExportOutput, **kwargs):
         super().__init__(**kwargs)
         self.export_out = export_plugin_output
 
@@ -75,23 +75,25 @@ class ExportEnv(poetry.utils.env.NullEnv):
             pass  # Assume a remote URI
 
         # Mist arg meddling
-        if '--prefix' in logged_args:
+        if "--prefix" in logged_args:
             # remove --prefix <arg>
-            pref_idx = logged_args.index('--prefix')
-            logged_args[pref_idx:pref_idx+2] = []
-        
+            pref_idx = logged_args.index("--prefix")
+            logged_args[pref_idx : pref_idx + 2] = []
+
         self.export_out.add_pip_command(logged_args)
         return ""
 
     def execute(self, *args, **kwargs) -> int:
         raise NotImplementedError
 
+
 class ExportExecutor(poetry.installation.executor.Executor):
     """An exporting executor"""
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self._use_modern_installation = False # Force using pip
+        self._use_modern_installation = False  # Force using pip
+
 
 class ExportPackagesCommand(GroupCommand):
     name = "export-packages"
@@ -104,14 +106,14 @@ class ExportPackagesCommand(GroupCommand):
             description="Directory to save packages to.",
             flag=False,
             value_required=True,
-            default=str(pathlib.Path('.', 'export-packages'))
+            default=str(pathlib.Path(".", "export-packages")),
         ),
         option(
             "shebang",
             description="Shebang to start the generated pip install script with",
             flag=False,
             value_required=True,
-            default="#! /bin/sh"
+            default="#! /bin/sh",
         ),
         option(
             "output_script",
@@ -119,7 +121,7 @@ class ExportPackagesCommand(GroupCommand):
             description="Place to save output script to.",
             flag=False,
             value_required=False,
-            default=None
+            default=None,
         ),
         *GroupCommand._group_dependency_options(),
     ]
@@ -130,18 +132,20 @@ class ExportPackagesCommand(GroupCommand):
 
     def handle(self) -> int:
         my_poetry = self.poetry
-        out_script : typing.Optional[pathlib.Path] = None
+        out_script: typing.Optional[pathlib.Path] = None
         log_out_script: bool = self.io.is_verbose()
-        if (out_script_input := self.option('output_script')) is not None:
+        if (out_script_input := self.option("output_script")) is not None:
             out_script = pathlib.Path(out_script_input)
         else:
             log_out_script = True
         out_dir = pathlib.Path(self.option("output_dir")).resolve()
         out_dir.mkdir(parents=True, exist_ok=True)
-        my_out = ExportOutput(out_dir, rel_root=pathlib.Path('.'))
-        
-        with tempfile.TemporaryDirectory(prefix='poetry-export-packages') as tmpd:
-            env = ExportEnv(export_plugin_output=my_out, path=pathlib.Path(tmpd), execute=False)
+        my_out = ExportOutput(out_dir, rel_root=pathlib.Path())
+
+        with tempfile.TemporaryDirectory(prefix="poetry-export-packages") as tmpd:
+            env = ExportEnv(
+                export_plugin_output=my_out, path=pathlib.Path(tmpd), execute=False
+            )
             installer = poetry.installation.installer.Installer(
                 io=self.io,
                 env=env,
@@ -150,30 +154,25 @@ class ExportPackagesCommand(GroupCommand):
                 pool=my_poetry.pool,
                 config=my_poetry.config,
                 executor=ExportExecutor(
-                    env=env,
-                    pool=my_poetry.pool,
-                    config=my_poetry.config,
-                    io=self.io
-                )
+                    env=env, pool=my_poetry.pool, config=my_poetry.config, io=self.io
+                ),
             )
 
             if (rc := installer.run()) != 0:
                 self.line_error("Poetry installer returned an error")
                 return rc
 
-        out_script_text = my_out.get_pip_script(str(self.option('shebang')))
+        out_script_text = my_out.get_pip_script(str(self.option("shebang")))
         if log_out_script:
             for line in out_script_text.splitlines():
                 self.info(f"Install script: {line}")
         if out_script is not None:
-            with out_script.open('w') as fout:
+            with out_script.open("w") as fout:
                 fout.write(out_script_text)
         return 0
 
 
-
 class ExportPackagesPlugin(poetry.plugins.application_plugin.ApplicationPlugin):
-    
     @property
     def commands(self) -> typing.List[Command]:
         return [ExportPackagesCommand]
