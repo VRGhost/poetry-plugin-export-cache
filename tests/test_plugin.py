@@ -8,7 +8,9 @@ import poetry_plugin_export_packages
 class TestExportOutput:
     @pytest.fixture
     def test_file(self, tmp_path):
-        my_file = tmp_path / "test.txt"
+        file_dir = tmp_path / "test_file_dir"
+        file_dir.mkdir()
+        my_file = file_dir / "test.txt"
         with my_file.open("w") as fout:
             fout.write("hello")
         return my_file
@@ -28,10 +30,19 @@ class TestExportOutput:
         assert str(out_fname1) == str(
             tmp_path / "export_out" / "d1" / "d2" / "d3" / "out" / "test.txt"
         )
+        assert out_fname1.is_file()
         out_fname2 = export_output.save_file(test_file)
         assert str(out_fname2) == str(
             tmp_path / "export_out" / "d1" / "d2" / "d3" / "out" / "test_2.txt"
         )
+        assert out_fname2.is_file()
+
+    def test_save_dir(self, tmp_path, test_file, export_output):
+        out_fname1 = export_output.save_file(test_file.parent)
+        assert str(out_fname1) == str(
+            tmp_path / "export_out" / "d1" / "d2" / "d3" / "out" / "test_file_dir"
+        )
+        assert out_fname1.is_dir()
 
     def test_rel_path(self, test_file, export_output):
         out_fname = export_output.save_file(test_file)
