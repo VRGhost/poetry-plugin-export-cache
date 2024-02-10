@@ -60,3 +60,12 @@ class TestExportOutput:
             "pip c2 a2",
             "",
         ]
+
+
+class TestExportCommand:
+    @pytest.fixture
+    def command(self):
+        return poetry_plugin_export_packages.plugin.ExportPackagesCommand()
+
+    def test_def_groups(self, command):
+        assert command.default_groups == {"main"}

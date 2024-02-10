@@ -38,7 +38,7 @@ class ExportOutput:
         elif orig.is_dir():
             shutil.copytree(orig, out_fname)
         else:
-            raise NotImplementedError(orig)
+            raise NotImplementedError(orig)  # pragma: nocover
         return out_fname
 
     def to_rel_path(self, path: pathlib.Path) -> pathlib.Path:
@@ -84,7 +84,7 @@ class ExportEnv(poetry.utils.env.NullEnv):
         return ""
 
     def execute(self, *args, **kwargs) -> int:
-        raise NotImplementedError
+        raise NotImplementedError  # pragma: nocover
 
 
 class ExportExecutor(poetry.installation.executor.Executor):
