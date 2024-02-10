@@ -47,3 +47,16 @@ def test_antigravity(tmp_path):
         ),
         "",
     ]
+
+
+def test_my_single_file(tmp_path):
+    """A simple project with a singular package"""
+    rv = run_export_packages(
+        tmp_path, RESOURCE_DIR / "my_single_file" / "pyproject.toml"
+    )
+    assert len(rv.packages) == 0
+    assert rv.script.splitlines() == [
+        "#! /bin/sh",
+        "",
+        "",
+    ]
