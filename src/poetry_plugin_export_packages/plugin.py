@@ -51,7 +51,7 @@ class ExportOutput:
         out_lines = [shebang, ""]
         for cmd in self.pip_commands:
             out_lines.append(shlex.join(("pip",) + cmd))
-        return "\n".join(out_lines)
+        return "\n".join(out_lines + ["", ""])
 
 
 class ExportEnv(poetry.utils.env.NullEnv):
@@ -101,7 +101,7 @@ class ExportPackagesCommand(GroupCommand):
 
     options = [
         option(
-            "output_dir",
+            "output-dir",
             short_name="o",
             description="Directory to save packages to.",
             flag=False,
@@ -116,7 +116,7 @@ class ExportPackagesCommand(GroupCommand):
             default="#! /bin/sh",
         ),
         option(
-            "output_script",
+            "output-script",
             short_name="f",
             description="Place to save output script to.",
             flag=False,
@@ -134,13 +134,18 @@ class ExportPackagesCommand(GroupCommand):
         my_poetry = self.poetry
         out_script: typing.Optional[pathlib.Path] = None
         log_out_script: bool = self.io.is_verbose()
-        if (out_script_input := self.option("output_script")) is not None:
+        if (out_script_input := self.option("output-script")) is not None:
             out_script = pathlib.Path(out_script_input)
         else:
             log_out_script = True
-        out_dir = pathlib.Path(self.option("output_dir")).resolve()
+        out_dir = pathlib.Path(self.option("output-dir")).resolve()
         out_dir.mkdir(parents=True, exist_ok=True)
-        my_out = ExportOutput(out_dir, rel_root=pathlib.Path())
+
+        if out_script:
+            rel_root = out_script.parent
+        else:
+            rel_root = pathlib.Path("/")
+        my_out = ExportOutput(out_dir, rel_root=rel_root)
 
         with tempfile.TemporaryDirectory(prefix="poetry-export-packages") as tmpd:
             env = ExportEnv(

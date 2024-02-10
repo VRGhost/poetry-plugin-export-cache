@@ -52,7 +52,7 @@ select = [
     "N",  # pep8 naming
     "C4", # list comprehensions
     "T20", # print()
-    "PTH", # use-pathlib - todo
+    "PTH",
 ]
 ignore = ["N802", "F841"]
 line-length = 88
