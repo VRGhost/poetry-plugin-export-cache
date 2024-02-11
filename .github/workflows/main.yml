@@ -34,7 +34,7 @@ jobs:
           poetry install
       - name: Apply poetry version
         run: |
-          if [[ "${{ matrix.poetry-version }}" -eq "latest" ]]
+          if [[ "${{ matrix.poetry-version }}" == "latest" ]]
           then
             pip install --upgrade poetry
           else
