@@ -37,6 +37,7 @@ pytest-local-badge = "^1.0.3"
 ruff = "^0.1.7"
 pytest-cov = "^4.1.0"
 pytest-timeout = "^2.2.0"
+pytest-mock = "^3.12.0"
 
 [tool.ruff]
 target-version = "py38"

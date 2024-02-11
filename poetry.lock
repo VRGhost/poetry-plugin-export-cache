@@ -1030,6 +1030,23 @@ pytest = ">=6.1.0"
 develop = ["black (>=22.12.0)", "build", "flake8-bugbear", "flake8-comprehensions", "flake8-import-order", "flake8-print", "pep8-naming", "pytest (>=7.1.0,<8)", "pytest-cov", "pytest-mock"]
 
 [[package]]
+name = "pytest-mock"
+version = "3.12.0"
+description = "Thin-wrapper around the mock package for easier use with pytest"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "pytest-mock-3.12.0.tar.gz", hash = "sha256:31a40f038c22cad32287bb43932054451ff5583ff094bca6f675df2f8bc1a6e9"},
+    {file = "pytest_mock-3.12.0-py3-none-any.whl", hash = "sha256:0972719a7263072da3a21c7f4773069bcc7486027d7e8e1f81d98a47e701bc4f"},
+]
+
+[package.dependencies]
+pytest = ">=5.0"
+
+[package.extras]
+dev = ["pre-commit", "pytest-asyncio", "tox"]
+
+[[package]]
 name = "pytest-timeout"
 version = "2.2.0"
 description = "pytest plugin to abort hanging tests"
@@ -1426,4 +1443,4 @@ testing = ["big-O", "jaraco.functools", "jaraco.itertools", "more-itertools", "p
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.8,<4"
-content-hash = "388a60784f375ba410e04dea69cf109d3d6e07b6118e204dd37421a9c4cd6e3e"
+content-hash = "170a4a801314579b577a645f52672b480a32627aec6ba0a7866b35bce1a9b938"
