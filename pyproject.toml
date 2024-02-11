@@ -25,7 +25,7 @@ keywords = ["poetry", "plugin"]
 
 [tool.poetry.dependencies]
 python = ">=3.8,<4"
-poetry = ">=1.7.1"
+poetry = ">=1.7.0"
 
 [tool.poetry.plugins."poetry.application.plugin"]
 export-cache = "poetry_plugin_export_packages.plugin:ExportPackagesPlugin"
