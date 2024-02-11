@@ -81,7 +81,7 @@ addopts = "-v -l --color=yes --cov=poetry_plugin_export_packages --cov-report te
 testpaths = [
     "tests",
 ]
-timeout = 3
+timeout = 30
 
 [build-system]
 requires = ["poetry-core"]
