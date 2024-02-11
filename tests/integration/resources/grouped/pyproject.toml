@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "grouped"
+version = "0.1.0"
+description = "This project provides several groups to test args with.  The dependencies match plugins' deps so they should be already in the cache"
+authors = ["Ilja Orlovs <vrghost@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+antigravity = "^0.1"
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.1.1"
+
+
+[tool.poetry.group.pytest.dependencies]
+pytest = "^8.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
