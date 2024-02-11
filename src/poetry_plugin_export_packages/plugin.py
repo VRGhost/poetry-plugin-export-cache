@@ -86,6 +86,14 @@ class ExportEnv(poetry.utils.env.NullEnv):
     def execute(self, *args, **kwargs) -> int:
         raise NotImplementedError  # pragma: nocover
 
+    @property
+    def sys_path(self) -> typing.List[str]:
+        # Do not return env parents' path to force
+        #   all deps to pass through installation"""
+        return [
+            str(self._path.resolve()),
+        ]
+
 
 class ExportExecutor(poetry.installation.executor.Executor):
     """An exporting executor"""
@@ -162,6 +170,7 @@ class ExportPackagesCommand(GroupCommand):
                     env=env, pool=my_poetry.pool, config=my_poetry.config, io=self.io
                 ),
             )
+            installer.only_groups(self.activated_groups)
 
             if (rc := installer.run()) != 0:
                 self.line_error("Poetry installer returned an error")
