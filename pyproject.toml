@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "poetry-plugin-export-packages"
 version = "0.0.0dev0"
-description = "The missing Python async timer."
+description = "Poetry plugin to export project dependencies as separate pip packages."
 authors = ["Ilya O. <vrghost@gmail.com>"]
 license = "MIT"
 readme = "README.md"
