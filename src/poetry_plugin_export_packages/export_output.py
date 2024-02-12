@@ -22,7 +22,7 @@ class PathEq:
                 # File not found
                 return None
             else:
-                raise
+                raise  # pragma: nocover
 
     def _is_eq_files(self, p1: pathlib.Path, p2: pathlib.Path) -> bool:
         with p1.open("rb") as fin1, p2.open("rb") as fin2:

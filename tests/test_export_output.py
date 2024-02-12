@@ -5,6 +5,66 @@ import pytest
 import poetry_plugin_export_packages
 
 
+class TestPathEq:
+    @pytest.fixture
+    def path_eq(self):
+        return poetry_plugin_export_packages.export_output.PathEq()
+
+    def test_missing_file(self, tmp_path, path_eq):
+        assert path_eq.stat(tmp_path / "idontexist") is None
+
+    def test_diff_dir_contents(self, tmp_path, path_eq):
+        d1 = tmp_path / "d1"
+        d2 = tmp_path / "d2"
+
+        for par in (d1, d2):
+            (par / "ch1" / "ch11").mkdir(parents=True)
+            (par / "ch2" / "ch22").mkdir(parents=True)
+
+        (d1 / "d1_unique").mkdir()
+
+        assert not path_eq._is_eq_dirs(d1, d2)
+
+    def test_diff_dir_file_contents(self, tmp_path, path_eq):
+        d1 = tmp_path / "d1"
+        d2 = tmp_path / "d2"
+
+        for par in (d1, d2):
+            par.mkdir(parents=True)
+            with (par / "file.txt").open("w") as fout:
+                fout.write(f"HELLO {par}")
+
+        assert not path_eq._is_eq_dirs(d1, d2)
+
+    def test_both_missing(self, tmp_path, path_eq):
+        d1 = tmp_path / "d1-missing"
+        d2 = tmp_path / "d2-missing"
+
+        assert path_eq.is_equal(d1, d2)
+
+    def test_one_exists_missing(self, tmp_path, path_eq):
+        d1 = tmp_path / "d1"
+        d1.mkdir()
+        d2 = tmp_path / "d2-missing"
+
+        assert not path_eq.is_equal(d1, d2)
+
+    def test_dif_types(self, tmp_path, path_eq):
+        d1 = tmp_path / "d1"
+        d1.mkdir()
+        d2 = tmp_path / "d2"
+        d2.mkdir()
+
+        t1 = d1 / "target"
+        t2 = d2 / "target"
+
+        t1.mkdir()
+        with t2.open("w") as fout:
+            fout.write("FILE")
+
+        assert not path_eq.is_equal(t1, t2)
+
+
 class TestExportOutput:
     @pytest.fixture
     def test_file(self, tmp_path):
