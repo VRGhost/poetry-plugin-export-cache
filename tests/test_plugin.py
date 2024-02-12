@@ -1,5 +1,3 @@
-import pathlib
-
 import poetry.console.application
 import pytest
 

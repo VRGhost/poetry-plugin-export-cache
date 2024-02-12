@@ -1,8 +1,65 @@
+import errno
+import os
 import pathlib
 import shlex
 import shutil
+import stat
 import threading
 import typing
+import zlib
+
+
+class PathEq:
+    """A helper class that checks if files (or dirs) are identical
+    or not.
+    """
+
+    def stat(self, path: pathlib.Path) -> typing.Optional[os.stat_result]:
+        try:
+            return path.stat()
+        except OSError as err:
+            if err.errno == errno.ENOENT:
+                # File not found
+                return None
+            else:
+                raise
+
+    def _is_eq_files(self, p1: pathlib.Path, p2: pathlib.Path) -> bool:
+        with p1.open("rb") as fin1, p2.open("rb") as fin2:
+            crc1 = zlib.crc32(fin1.read())
+            crc2 = zlib.crc32(fin2.read())
+            return crc1 == crc2
+
+    def _is_eq_dirs(self, p1: pathlib.Path, p2: pathlib.Path) -> bool:
+        p1_children = sorted(ch.name for ch in p1.iterdir())
+        p2_children = sorted(ch.name for ch in p2.iterdir())
+        if p1_children != p2_children:
+            # Different contents
+            return False
+        for ch_name in p1_children:
+            if not self.is_equal(p1 / ch_name, p2 / ch_name):
+                return False
+        return True
+
+    def is_equal(self, p1: pathlib.Path, p2: pathlib.Path) -> bool:
+        p1_stat = self.stat(p1)
+        p2_stat = self.stat(p2)
+        if (p1_stat is None) and (p2_stat is None):
+            # Neither exists -> return that they are equal
+            return True
+        elif None in (p1_stat, p2_stat):
+            # One exists, the other does not => not equal
+            return False
+        # else
+        assert None not in (p1_stat, p2_stat), "Both paths exist"
+        if p1_stat.st_mode != p2_stat.st_mode:
+            # They are of different types (e.g. file vs dir) => Not identical
+            return False
+        # Both paths exist and of identical type
+        if stat.S_ISDIR(p1_stat.st_mode):
+            return self._is_eq_dirs(p1, p2)
+        assert stat.S_ISREG(p1_stat.st_mode), "Must be file then"
+        return self._is_eq_files(p1, p2)
 
 
 class ExportOutput:
@@ -23,9 +80,16 @@ class ExportOutput:
         with self.lock:
             out_fname = self.out_dir / orig.name
             while out_fname.exists():
-                # Ensure output name uniqueness
-                idx += 1
-                out_fname = self.out_dir / f"{orig.stem}_{idx}{''.join(orig.suffixes)}"
+                if PathEq().is_equal(orig, out_fname):
+                    # If the existing export-ed file is already a copy
+                    #  - return that
+                    return out_fname
+                else:
+                    # Ensure output name uniqueness
+                    idx += 1
+                    out_fname = (
+                        self.out_dir / f"{orig.stem}_{idx}{''.join(orig.suffixes)}"
+                    )
             if orig.is_file():
                 shutil.copyfile(orig, out_fname)
             elif orig.is_dir():
