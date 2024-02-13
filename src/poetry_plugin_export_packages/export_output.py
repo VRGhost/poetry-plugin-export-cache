@@ -52,7 +52,8 @@ class PathEq:
             return False
         # else
         assert None not in (p1_stat, p2_stat), "Both paths exist"
-        if p1_stat.st_mode != p2_stat.st_mode:
+        st_dir_or_file = stat.S_IFDIR | stat.S_IFREG
+        if (p1_stat.st_mode & st_dir_or_file) != (p2_stat.st_mode & st_dir_or_file):
             # They are of different types (e.g. file vs dir) => Not identical
             return False
         # Both paths exist and of identical type
