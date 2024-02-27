@@ -1,0 +1,15 @@
+[tool.poetry]
+name = "ruff-test"
+version = "0.1.0"
+description = "Ruff is a complied library, so the fetched packages should depend on the OS (darwin vs linux)"
+authors = ["Ilja Orlovs <vrghost@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+ruff = "^0.2.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

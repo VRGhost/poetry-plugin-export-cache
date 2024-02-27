@@ -88,3 +88,23 @@ def test_grouped(tmp_path, params, exp_packages, exp_missing_packages):
         assert all(
             must_be_missing not in pkg.name for pkg in rv.packages
         ), must_be_missing
+
+
+@pytest.mark.parametrize(
+    "platform, exp_pkg_name",
+    [
+        ("linux", "manylinux"),
+        ("win32", "win32"),
+    ],
+)
+def test_ruff(tmp_path, platform, exp_pkg_name):
+    rv = run_export_packages(
+        tmp_path,
+        RESOURCE_DIR / "ruff" / "pyproject.toml",
+        extra_args=["--platform", platform],
+    )
+    assert len(rv.packages) > 0
+    ruff_pkg = [el.name for el in rv.packages if el.name.startswith("ruff-")]
+    assert len(ruff_pkg) == 1, "There must be only one"
+    ruff_pkg = ruff_pkg[0]
+    assert exp_pkg_name in ruff_pkg
