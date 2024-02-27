@@ -1,25 +1,32 @@
+import os
 import pathlib
+import platform
+import sys
 import tempfile
 import typing
 
+import packaging.tags
 import poetry.console.application
 import poetry.installation.executor
 import poetry.installation.installer
 import poetry.plugins
 import poetry.utils.env
 from cleo.helpers import option
+from pip import __version__ as DEFAULT_PIP_VERSION  # noqa: N812
 from poetry.console.commands.command import Command
 from poetry.console.commands.group_command import GroupCommand
 from poetry.core.packages.dependency_group import MAIN_GROUP
 
 from .export_output import ExportOutput
 
+DEFAULT_VERSION_INFO = ".".join(str(el) for el in sys.version_info[:3])
 
-class ExportEnv(poetry.utils.env.NullEnv):
+
+class ExportEnv(poetry.utils.env.MockEnv):
     export_out: ExportOutput
 
     def __init__(self, export_plugin_output: ExportOutput, **kwargs):
-        super().__init__(**kwargs)
+        super().__init__(is_venv=False, execute=False, **kwargs)
         self.export_out = export_plugin_output
 
     def run_pip(self, *args: str, **kwargs: typing.Any) -> str:
@@ -35,7 +42,7 @@ class ExportEnv(poetry.utils.env.NullEnv):
         else:
             pass  # Assume a remote URI
 
-        # Mist arg meddling
+        # Misc arg meddling
         if "--prefix" in logged_args:
             # remove --prefix <arg>
             pref_idx = logged_args.index("--prefix")
@@ -45,6 +52,9 @@ class ExportEnv(poetry.utils.env.NullEnv):
         return ""
 
     def execute(self, *args, **kwargs) -> int:
+        raise NotImplementedError  # pragma: nocover
+    
+    def _run(self, *args, **kwargs) -> int:
         raise NotImplementedError  # pragma: nocover
 
     @property
@@ -92,6 +102,103 @@ class ExportPackagesCommand(GroupCommand):
             value_required=False,
             default=None,
         ),
+        option(
+            "python-implementation",
+            description="""
+                The Python platform to fetch packages for.
+
+                Default:
+                ```
+                    >>> import platform
+                    >>> print(platform.python_implementation())
+                ```
+            """,
+            flag=False,
+            default=platform.python_implementation(),
+        ),
+        option(
+            "platform",
+            description="""
+                Target platform (e.g 'darwin' or 'linux').
+
+                Default:
+                ```
+                    >>> import sys
+                    >>> print(sys.platform)
+                ```
+            """,
+            flag=False,
+            default=sys.platform,
+        ),
+        option(
+            "platform-machine",
+            description="""
+                Target cpu arch. (e.g. "x86_64").
+
+                Default:
+                ```
+                    >>> import platform
+                    >>> print(platform.machine())
+                ```
+            """,
+            flag=False,
+            default=platform.machine(),
+        ),
+        option(
+            "version-info",
+            description="""
+                The target python version.
+
+                Default:
+                ```
+                    >>> import sys
+                    >>> print(sys.version_info)
+                ```
+            """,
+            flag=False,
+            default=DEFAULT_VERSION_INFO,
+        ),
+        option(
+            "pip-version",
+            description="""
+                Pip version.
+
+                Default:
+                ```
+                    >>> from pip import __version__
+                    >>> print(__version__)
+                ```
+            """,
+            flag=False,
+            default=DEFAULT_PIP_VERSION,
+        ),
+        option(
+            "os-name",
+            description="""
+            Target OS name.
+
+            Default:
+            ```
+                >>> import os
+                >>> print(os.name)
+            ```
+        """,
+            flag=False,
+            default=os.name,
+        ),
+        option(
+            "supported-tags",
+            description="""
+                Supported tags (comma-separated).
+
+                Default:
+                ```
+                    >>> from packaging.tags import sys_tags
+                    >>> print(list(sys_tags()))
+                ```
+            """,
+            flag=False,
+        ),
         *GroupCommand._group_dependency_options(),
     ]
 
@@ -116,9 +223,36 @@ class ExportPackagesCommand(GroupCommand):
             rel_root = pathlib.Path("/")
         my_out = ExportOutput(out_dir, rel_root=rel_root)
 
+        # Compute supported_tags for the export env
+        python_version = [
+            int(el)
+            for el in self.option("version-info", DEFAULT_VERSION_INFO).split(".")
+        ]
+        platform = self.option("platform")
+        if supported_tags_str := self.option("supported-tags"):
+            supported_tags = set()
+            for str_tag in supported_tags_str.split(","):
+                supported_tags.update(packaging.tags.parse_tag(str_tag))
+            supported_tags = list(supported_tags)
+        else:
+            supported_tags = list(
+                packaging.tags.compatible_tags(
+                    python_version=python_version,
+                    platforms=[self.option("platform-machine")],
+                )
+            )
+
         with tempfile.TemporaryDirectory(prefix="poetry-export-packages") as tmpd:
             env = ExportEnv(
-                export_plugin_output=my_out, path=pathlib.Path(tmpd), execute=False
+                export_plugin_output=my_out,
+                path=pathlib.Path(tmpd),
+                version_info=python_version,
+                python_implementation=self.option("python-implementation"),
+                platform=platform,
+                platform_machine=self.option("platform-machine"),
+                os_name=self.option("os-name"),
+                pip_version=self.option("pip-version", DEFAULT_PIP_VERSION),
+                supported_tags=supported_tags,
             )
             installer = poetry.installation.installer.Installer(
                 io=self.io,
